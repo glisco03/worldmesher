@@ -4,3 +4,11 @@ transitive-extendable method net/minecraft/client/render/block/BlockModelRendere
 transitive-extendable method net/minecraft/client/render/block/BlockModelRenderer renderQuadsFlat (Lnet/minecraft/world/BlockRenderView;Lnet/minecraft/block/BlockState;Lnet/minecraft/util/math/BlockPos;IIZLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;Ljava/util/List;Ljava/util/BitSet;)V
 
 transitive-extendable method net/minecraft/client/render/block/FluidRenderer vertex (Lnet/minecraft/client/render/VertexConsumer;DDDFFFFFI)V
+accessible method net/minecraft/client/render/block/FluidRenderer getLight (Lnet/minecraft/world/BlockRenderView;Lnet/minecraft/util/math/BlockPos;)I
+accessible method net/minecraft/client/render/block/FluidRenderer isSideCovered (Lnet/minecraft/world/BlockView;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/util/math/Direction;FLnet/minecraft/block/BlockState;)Z
+accessible method net/minecraft/client/render/block/FluidRenderer isSameFluid (Lnet/minecraft/fluid/FluidState;Lnet/minecraft/fluid/FluidState;)Z
+accessible method net/minecraft/client/render/block/FluidRenderer getFluidHeight (Lnet/minecraft/world/BlockRenderView;Lnet/minecraft/fluid/Fluid;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraft/fluid/FluidState;)F
+accessible method net/minecraft/client/render/block/FluidRenderer calculateFluidHeight (Lnet/minecraft/world/BlockRenderView;Lnet/minecraft/fluid/Fluid;FFFLnet/minecraft/util/math/BlockPos;)F
+accessible field net/minecraft/client/render/block/FluidRenderer waterOverlaySprite Lnet/minecraft/client/texture/Sprite;
+accessible field net/minecraft/client/render/block/FluidRenderer lavaSprites [Lnet/minecraft/client/texture/Sprite;
+accessible field net/minecraft/client/render/block/FluidRenderer waterSprites [Lnet/minecraft/client/texture/Sprite;
