@@ -3,8 +3,6 @@ package io.wispforest.worldmesher;
 import com.google.common.collect.HashMultimap;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.systems.VertexSorter;
-import io.wispforest.worldmesher.mixin.BufferBuilderAccessor;
-import io.wispforest.worldmesher.mixin.GlAllocationUtilsAccessor;
 import io.wispforest.worldmesher.render.FluidVertexConsumer;
 import io.wispforest.worldmesher.render.MeshRenderView;
 import net.fabricmc.fabric.api.renderer.v1.RendererAccess;
@@ -16,6 +14,7 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.VertexBuffer;
 import net.minecraft.client.render.*;
+import net.minecraft.client.render.chunk.BlockBufferAllocatorStorage;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -29,7 +28,6 @@ import net.minecraft.world.World;
 import org.apache.commons.lang3.function.TriFunction;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
-import org.lwjgl.system.MemoryUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -267,6 +265,8 @@ public class WorldMesh {
     }
 
     private void build() {
+        var allocatorStorage = new BlockBufferAllocatorStorage();
+
         var client = MinecraftClient.getInstance();
         var blockRenderManager = client.getBlockRenderManager();
 
@@ -278,7 +278,7 @@ public class WorldMesh {
         try {
             //noinspection UnstableApiUsage
             renderContext = RendererAccess.INSTANCE.getRenderer() instanceof IndigoRenderer
-                    ? new WorldMesherRenderContext(this.world, layer -> this.getOrCreateBuilder(builderStorage, layer))
+                    ? new WorldMesherRenderContext(this.world, layer -> this.getOrCreateBuilder(allocatorStorage, builderStorage, layer))
                     : null;
         } catch (Throwable throwable) {
             var fabricApiVersion = FabricLoader.getInstance().getModContainer("worldmesher").get().getMetadata().getCustomValue("worldmesher:fabric_api_build_version").getAsString();
@@ -338,7 +338,7 @@ public class WorldMesh {
                 matrices.translate(-(pos.getX() & 15), -(pos.getY() & 15), -(pos.getZ() & 15));
                 matrices.translate(renderPos.getX(), renderPos.getY(), renderPos.getZ());
 
-                blockRenderManager.renderFluid(pos, world, new FluidVertexConsumer(this.getOrCreateBuilder(builderStorage, fluidLayer), matrices.peek().getPositionMatrix()), state, fluidState);
+                blockRenderManager.renderFluid(pos, world, new FluidVertexConsumer(this.getOrCreateBuilder(allocatorStorage, builderStorage, fluidLayer), matrices.peek().getPositionMatrix()), state, fluidState);
 
                 matrices.pop();
             }
@@ -352,18 +352,10 @@ public class WorldMesh {
             if (renderContext != null && !model.isVanillaAdapter()) {
                 renderContext.tessellateBlock(this.world, state, pos, model, matrices);
             } else if (state.getRenderType() == BlockRenderType.MODEL) {
-                blockRenderManager.getModelRenderer().render(this.world, model, state, pos, matrices, this.getOrCreateBuilder(builderStorage, blockLayer), cull, random, state.getRenderingSeed(pos), OverlayTexture.DEFAULT_UV);
+                blockRenderManager.getModelRenderer().render(this.world, model, state, pos, matrices, this.getOrCreateBuilder(allocatorStorage, builderStorage, blockLayer), cull, random, state.getRenderingSeed(pos), OverlayTexture.DEFAULT_UV);
             }
 
             matrices.pop();
-        }
-
-        if (builderStorage.containsKey(RenderLayer.getTranslucent())) {
-            var translucentBuilder = builderStorage.get(RenderLayer.getTranslucent());
-            var camera = client.gameRenderer.getCamera();
-
-            // TODO this camera position should probably be customizable
-            translucentBuilder.setSorter(VertexSorter.byDistance((float) camera.getPos().x - (float) from.getX(), (float) camera.getPos().y - (float) from.getY(), (float) camera.getPos().z - (float) from.getZ()));
         }
 
         var future = new CompletableFuture<Void>();
@@ -374,15 +366,14 @@ public class WorldMesh {
             builderStorage.forEach((renderLayer, bufferBuilder) -> {
                 var newBuffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
 
+                var built = bufferBuilder.end();
+                if (renderLayer == RenderLayer.getTranslucent()) {
+                    var camera = client.gameRenderer.getCamera();
+                    built.sortQuads(allocatorStorage.get(renderLayer), VertexSorter.byDistance((float) camera.getPos().x - (float) from.getX(), (float) camera.getPos().y - (float) from.getY(), (float) camera.getPos().z - (float) from.getZ()));
+                }
+
                 newBuffer.bind();
-                newBuffer.upload(bufferBuilder.end());
-
-                GlAllocationUtilsAccessor.worldmesher$getAllocator().free(
-                        MemoryUtil.memAddress(((BufferBuilderAccessor) bufferBuilder).worldmesher$getBuffer(), 0)
-                );
-
-                // primarily here to inform ModernFix about what we did
-                ((BufferBuilderAccessor) bufferBuilder).worldmesher$setBuffer(null);
+                newBuffer.upload(built);
 
                 var discardedBuffer = this.bufferStorage.put(renderLayer, newBuffer);
                 if (discardedBuffer != null) {
@@ -402,17 +393,15 @@ public class WorldMesh {
             );
         }
 
+        allocatorStorage.close();
         this.renderInfo = new DynamicRenderInfo(
                 blockEntities, entities
         );
     }
 
-    private VertexConsumer getOrCreateBuilder(Map<RenderLayer, BufferBuilder> builderStorage, RenderLayer layer) {
+    private VertexConsumer getOrCreateBuilder(BlockBufferAllocatorStorage allocatorStorage, Map<RenderLayer, BufferBuilder> builderStorage, RenderLayer layer) {
         return builderStorage.computeIfAbsent(layer, renderLayer -> {
-            var builder = new BufferBuilder(layer.getExpectedBufferSize());
-            builder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL);
-
-            return builder;
+            return new BufferBuilder(allocatorStorage.get(layer),  VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL);
         });
     }
 

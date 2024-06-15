@@ -1,6 +1,0 @@
-accessWidener v2 named
-transitive-extendable class net/minecraft/client/render/block/BlockModelRenderer$AmbientOcclusionCalculator
-transitive-extendable method net/minecraft/client/render/block/BlockModelRenderer renderQuadsSmooth (Lnet/minecraft/world/BlockRenderView;Lnet/minecraft/block/BlockState;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;Ljava/util/List;[FLjava/util/BitSet;Lnet/minecraft/client/render/block/BlockModelRenderer$AmbientOcclusionCalculator;I)V
-transitive-extendable method net/minecraft/client/render/block/BlockModelRenderer renderQuadsFlat (Lnet/minecraft/world/BlockRenderView;Lnet/minecraft/block/BlockState;Lnet/minecraft/util/math/BlockPos;IIZLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;Ljava/util/List;Ljava/util/BitSet;)V
-
-transitive-extendable method net/minecraft/client/render/block/FluidRenderer vertex (Lnet/minecraft/client/render/VertexConsumer;DDDFFFFFI)V

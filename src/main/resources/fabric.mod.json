@@ -14,10 +14,6 @@
   "license": "MIT",
   "environment": "client",
   "icon": "assets/worldmesher/icon.png",
-  "accessWidener": "worldmesher.accesswidener",
-  "mixins": [
-    "worldmesher.mixins.json"
-  ],
   "custom": {
     "modmenu": {
       "badges": [
