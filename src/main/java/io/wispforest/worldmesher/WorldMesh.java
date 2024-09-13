@@ -366,7 +366,9 @@ public class WorldMesh {
             builderStorage.forEach((renderLayer, bufferBuilder) -> {
                 var newBuffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
 
-                var built = bufferBuilder.end();
+                var built = bufferBuilder.endNullable();
+                if (built == null) return;
+
                 if (renderLayer == RenderLayer.getTranslucent()) {
                     var camera = client.gameRenderer.getCamera();
                     built.sortQuads(allocatorStorage.get(renderLayer), VertexSorter.byDistance((float) camera.getPos().x - (float) from.getX(), (float) camera.getPos().y - (float) from.getY(), (float) camera.getPos().z - (float) from.getZ()));
