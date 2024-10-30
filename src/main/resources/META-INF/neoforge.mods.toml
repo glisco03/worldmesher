@@ -1,0 +1,36 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+license = "MIT"
+
+[[mods]]
+modId = "worldmesher"
+version = "${version}"
+displayName = "Worldmesher"
+provides = ["worldmesher"]
+authors = "glisco"
+credits = ""
+description = '''
+Library for meshing world sections into self-contained renderable objects
+'''
+logoFile = "assets/worldmesher/icon.png"
+
+[[dependencies.worldmesher]]
+modId = "neoforge"
+required = true
+versionRange = "[21,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.worldmesher]]
+modId = "minecraft"
+required = true
+versionRange = "[1.21,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.worldmesher]]
+modId = "fabric_api"
+required = true
+versionRange = "[0.101.2+2.0.10+1.21,)"
+ordering = "NONE"
+side = "BOTH"

@@ -1,7 +1,10 @@
-package net.fabricmc.fabric.impl.client.indigo.renderer.render;
+package io.wispforest.worldmesher.render;
 
 import net.fabricmc.fabric.impl.client.indigo.renderer.aocalc.AoCalculator;
 import net.fabricmc.fabric.impl.client.indigo.renderer.aocalc.AoLuminanceFix;
+import net.fabricmc.fabric.impl.client.indigo.renderer.render.AbstractBlockRenderContext;
+import net.fabricmc.fabric.impl.client.indigo.renderer.render.BlockRenderInfo;
+import net.fabricmc.fabric.impl.renderer.VanillaModelEncoder;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
@@ -16,6 +19,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.BlockRenderView;
 
+import java.lang.reflect.Field;
 import java.util.function.Function;
 
 @SuppressWarnings("UnstableApiUsage")
@@ -29,7 +33,13 @@ public class WorldMesherRenderContext extends AbstractBlockRenderContext {
         this.bufferFunc = bufferFunc;
 
         this.blockInfo.prepareForWorld(blockView, true);
-        this.blockInfo.random = Random.create();
+        try {
+            Field randomField = BlockRenderInfo.class.getDeclaredField("random");
+            randomField.setAccessible(true);
+            randomField.set(this.blockInfo, Random.create());
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
     }
 
     public void tessellateBlock(BlockRenderView blockView, BlockState blockState, BlockPos blockPos, final BakedModel model, MatrixStack matrixStack) {
@@ -40,11 +50,18 @@ public class WorldMesherRenderContext extends AbstractBlockRenderContext {
             this.matrix = matrixStack.peek().getPositionMatrix();
             this.normalMatrix = matrixStack.peek().getNormalMatrix();
 
-            blockInfo.recomputeSeed = true;
+            try {
+                Field recomputeSeedField = BlockRenderInfo.class.getDeclaredField("recomputeSeed");
+                recomputeSeedField.setAccessible(true);
+                recomputeSeedField.set(this.blockInfo, true);
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                e.printStackTrace();
+            }
 
             aoCalc.clear();
-            blockInfo.prepareForBlock(blockState, blockPos, model.useAmbientOcclusion());
-            model.emitBlockQuads(blockInfo.blockView, blockInfo.blockState, blockInfo.blockPos, blockInfo.randomSupplier, this);
+            // note: might be a bit broke cause for some reason FFAPI isn't 1 to 1 on this
+            blockInfo.prepareForBlock(blockState, blockPos, model.useAmbientOcclusion(), getModelData(), getRenderType());
+            VanillaModelEncoder.emitBlockQuads(model, blockInfo.blockState, blockInfo.randomSupplier, this);
         } catch (Throwable throwable) {
             CrashReport crashReport = CrashReport.create(throwable, "Tessellating block in WorldMesher mesh");
             CrashReportSection crashReportSection = crashReport.addElement("Block being tessellated");
