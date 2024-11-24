@@ -34,7 +34,7 @@ public class WorldMesherRenderContext extends AbstractBlockRenderContext {
 
     public void tessellateBlock(BlockRenderView blockView, BlockState blockState, BlockPos blockPos, final BakedModel model, MatrixStack matrixStack) {
         try {
-            Vec3d vec3d = blockState.getModelOffset(blockView, blockPos);
+            Vec3d vec3d = blockState.getModelOffset(blockPos);
             matrixStack.translate(vec3d.x, vec3d.y, vec3d.z);
 
             this.matrix = matrixStack.peek().getPositionMatrix();

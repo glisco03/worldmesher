@@ -12,11 +12,13 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.GlUsage;
 import net.minecraft.client.gl.VertexBuffer;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.chunk.BlockBufferAllocatorStorage;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
@@ -297,7 +299,7 @@ public class WorldMesh {
                     .map(entity -> {
                         if (this.freezeEntities) {
                             var originalEntity = entity;
-                            entity = entity.getType().create(client.world);
+                            entity = entity.getType().create(client.world, SpawnReason.LOAD);
 
                             entity.copyFrom(originalEntity);
                             entity.copyPositionAndRotation(originalEntity);
@@ -364,7 +366,7 @@ public class WorldMesh {
             this.bufferStorage.clear();
 
             builderStorage.forEach((renderLayer, bufferBuilder) -> {
-                var newBuffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
+                var newBuffer = new VertexBuffer(GlUsage.STATIC_WRITE);
 
                 var built = bufferBuilder.endNullable();
                 if (built == null) return;
