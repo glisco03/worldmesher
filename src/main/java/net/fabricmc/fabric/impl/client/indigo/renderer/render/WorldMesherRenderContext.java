@@ -34,8 +34,8 @@ public class WorldMesherRenderContext extends AbstractBlockRenderContext {
 
     public void tessellateBlock(BlockRenderView blockView, BlockState blockState, BlockPos blockPos, final BakedModel model, MatrixStack matrixStack) {
         try {
-            Vec3d vec3d = blockState.getModelOffset(blockPos);
-            matrixStack.translate(vec3d.x, vec3d.y, vec3d.z);
+            Vec3d offset = blockState.getModelOffset(blockPos);
+            matrixStack.translate(offset.x, offset.y, offset.z);
 
             this.matrix = matrixStack.peek().getPositionMatrix();
             this.normalMatrix = matrixStack.peek().getNormalMatrix();
@@ -44,7 +44,7 @@ public class WorldMesherRenderContext extends AbstractBlockRenderContext {
 
             aoCalc.clear();
             blockInfo.prepareForBlock(blockState, blockPos, model.useAmbientOcclusion());
-            model.emitBlockQuads(blockInfo.blockView, blockInfo.blockState, blockInfo.blockPos, blockInfo.randomSupplier, this);
+            model.emitBlockQuads(getEmitter(), blockInfo.blockView, blockInfo.blockState, blockInfo.blockPos, blockInfo.randomSupplier, blockInfo::shouldCullSide);
         } catch (Throwable throwable) {
             CrashReport crashReport = CrashReport.create(throwable, "Tessellating block in WorldMesher mesh");
             CrashReportSection crashReportSection = crashReport.addElement("Block being tessellated");

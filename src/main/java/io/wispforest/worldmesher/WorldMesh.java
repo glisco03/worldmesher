@@ -5,7 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.systems.VertexSorter;
 import io.wispforest.worldmesher.render.FluidVertexConsumer;
 import io.wispforest.worldmesher.render.MeshRenderView;
-import net.fabricmc.fabric.api.renderer.v1.RendererAccess;
+import net.fabricmc.fabric.api.renderer.v1.Renderer;
 import net.fabricmc.fabric.impl.client.indigo.renderer.IndigoRenderer;
 import net.fabricmc.fabric.impl.client.indigo.renderer.render.WorldMesherRenderContext;
 import net.fabricmc.loader.api.FabricLoader;
@@ -279,7 +279,7 @@ public class WorldMesh {
         WorldMesherRenderContext renderContext = null;
         try {
             //noinspection UnstableApiUsage
-            renderContext = RendererAccess.INSTANCE.getRenderer() instanceof IndigoRenderer
+            renderContext = Renderer.get() instanceof IndigoRenderer
                     ? new WorldMesherRenderContext(this.world, layer -> this.getOrCreateBuilder(allocatorStorage, builderStorage, layer))
                     : null;
         } catch (Throwable throwable) {
